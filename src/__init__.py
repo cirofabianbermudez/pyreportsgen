@@ -1,7 +1,7 @@
 from importlib.metadata import version, PackageNotFoundError
 
 try:
-    __version__ = version("pyuvcgen")
+    __version__ = version("pyrepgen")
 except PackageNotFoundError:
     __version__ = "0.0.0"
 

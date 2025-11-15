@@ -1,13 +1,25 @@
 [project]
-name = "pyreportsgen"
+name = "pyrepgen"
 version = "0.1.0"
 authors = [
     {name = "Ciro Fabian Bermudez Marquez"}
 ]
+readme = "README.md"
+description = "Tool for generating reports from GitLab and GitHub repositories for verification projects."
 requires-python = ">= 3.9"
 dependencies = [
     "numpy >= 2.3.4",
     "pandas >= 2.3.3",
-    "matplotlib >= 3.10.7"
+    "matplotlib >= 3.10.7",
+    "requests >= 2.32.5"
 ]
+
+# [build-system]
+# requires = ["hatchling"]
+# build-backend = "hatchling.build"
+
+# [project.scripts]
+# pyrepgen = "pyrepgen.__main__:main"
    
+# [project.urls]
+# Homepage = "https://github.com/cirofabianbermudez/pyrepgen"
