@@ -47,22 +47,25 @@ def main() -> None:
     
     args = parser.parse_args()
 
+    # Set up logging
     logging.basicConfig(
         level=logging.INFO,
         format="[%(levelname)s]: %(message)s",
     )
-
     logging.info("Starting report generation")
     
+    # Mode selection logic
     mode = args.mode
     logging.info(f"MODE: {mode}")
-    
     if mode == "read" and not args.input:
         logging.error("Input JSON file must be specified in read mode")
         sys.exit(1)
     
     # Load YAML config
     config_path = args.config
+    if config_path.exists() is False:
+        logging.error(f"Configuration file {config_path} does not exist")
+        sys.exit(1)
     data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     
     gitlab_url   = data.get("gitlab_url", "")
@@ -78,18 +81,25 @@ def main() -> None:
         sys.exit(1)
 
     logging.info(f"YAML configuration loaded")
-    logging.info(f"GitLab URL:  {gitlab_url}")
-    logging.info(f"Project ID:  {project_id}")
-    logging.info(f"Branch:      {ref_name}")
-    logging.info(f"Output JSON: {output_json}")
+    logging.info(f"GitLab URL:   {gitlab_url}")
+    logging.info(f"Project ID:   {project_id}")
+    logging.info(f"Branch:       {ref_name}")
+    logging.info(f"Output JSON:  {output_json}")
     logging.info(f"Author Email: {author_email}")
+    logging.info(f"Since:        {since}")
+    logging.info(f"Until:        {until}")
     
+    # Fetch or read commits
     if args.mode == "read":
         # Read commits from input JSON file
         input_path = args.input
         logging.info(f"Reading commits from {input_path}")
-        with open(input_path, "r", encoding="utf-8") as f:
-            all_commits = json.load(f)
+        try:
+            with open(input_path, "r", encoding="utf-8") as f:
+                all_commits = json.load(f)
+        except FileNotFoundError:
+            logging.error(f"Input file {input_path} not found")
+            sys.exit(1)
     else:
         access_token = os.environ.get("GITLAB_TOKEN")
         if not access_token:
@@ -107,7 +117,8 @@ def main() -> None:
             since=since,
             until=until
         )
-    
+
+    # Filter commits
     filter_commits = filter_out_merge_commits(all_commits)
     logging.info(f"Removing merge commits")
     logging.info(f"Extracted: {len(filter_commits)} commits")
@@ -119,7 +130,11 @@ def main() -> None:
     histogram = build_commit_histogram_by_date(filter_commits)
     dates, counts = fill_missing_days_in_histogram(histogram)
     
-    create_commit_plot(dates, counts)
+    logging.info(f"First commit date: {dates[0].strftime('%Y-%m-%d')}")
+    logging.info(f"Last commit date: {dates[-1].strftime('%Y-%m-%d')}")
+
+    # Generate plot
+    create_commit_plot(dates, counts, author="Ciro Fabian Bermudez Marquez", email=author_email)
     
 if __name__ == "__main__":
     main()

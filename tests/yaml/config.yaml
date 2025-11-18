@@ -2,7 +2,6 @@ gitlab_url: https://baltig.infn.it
 project_id: vip/gpio_uvc
 ref_name: main
 output_json: all_commits.json
-input_json: all_commits.json
 author_email: cirofabian.bermudezmarquez@ba.infn.it
-# since: 2025-07-23
-# until: 2025-11-17
+# since: 2024-09-14
+# until: 2024-10-18
