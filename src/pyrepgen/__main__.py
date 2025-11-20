@@ -15,14 +15,14 @@ from .gitlab_fetch import (
     fill_missing_days_in_histogram,
 )
 from .plot_manager import create_commit_plot
-
+from .formatter import CustomHelpFormatter
 
 def main() -> None:
 
     parser = argparse.ArgumentParser(
         prog="pyrepgen",
         description="Generate reports from GitLab/GitHub repositories for verification reports.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        formatter_class=CustomHelpFormatter,
         epilog="TODO",
     )
     parser.add_argument(
@@ -54,22 +54,27 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    mode = args.mode
+    config_path = args.config
+    input_path = args.input
+
     # Set up logging
     logging.basicConfig(
         level=logging.INFO,
         format="[%(levelname)s]: %(message)s",
     )
-    logging.info("Starting report generation")
+
+    logging.info("=== STARTING REPORT GENERATION ===")
+    logging.info(f"MODE:        {mode}")
+    logging.info(f"YAML CONFIG: {config_path}")
+    logging.info(f"INPUT JSON:  {input_path}")
 
     # Mode selection logic
-    mode = args.mode
-    logging.info(f"MODE: {mode}")
-    if mode == "read" and not args.input:
+    if mode == "read" and not input_path:
         logging.error("Input JSON file must be specified in read mode")
         sys.exit(1)
 
     # Load YAML config
-    config_path = args.config
     if config_path.exists() is False:
         logging.error(f"Configuration file {config_path} does not exist")
         sys.exit(1)
@@ -96,7 +101,7 @@ def main() -> None:
         )
         sys.exit(1)
 
-    logging.info(f"YAML configuration loaded")
+    logging.info(f"=== YAML configuration loaded ===")
     logging.info(f"GitLab URL:   {gitlab_url}")
     logging.info(f"Project ID:   {project_id}")
     logging.info(f"Branch:       {ref_name}")
@@ -114,9 +119,9 @@ def main() -> None:
 
     # Fetch or read commits
     if args.mode == "read":
+        logging.info(f" === READ MODE ===")
         # Read commits from input JSON file
-        input_path = args.input
-        logging.info(f"Reading commits from {input_path}")
+        logging.info(f"Reading commits from: {input_path}")
         try:
             with open(input_path, "r", encoding="utf-8") as f:
                 all_commits = json.load(f)
@@ -124,6 +129,7 @@ def main() -> None:
             logging.error(f"Input file {input_path} not found")
             sys.exit(1)
     else:
+        logging.info(f" === NORMAL MODE ===")
         access_token = os.environ.get("GITLAB_TOKEN")
         if not access_token:
             logging.error("GITLAB_TOKEN environment variable not set")
@@ -154,9 +160,10 @@ def main() -> None:
     all_dates, all_counts = fill_missing_days_in_histogram(histogram)
 
     logging.info(f"First commit date: {all_dates[0].strftime('%Y-%m-%d')}")
-    logging.info(f"Last commit date: {all_dates[-1].strftime('%Y-%m-%d')}")
+    logging.info(f"Last commit date:  {all_dates[-1].strftime('%Y-%m-%d')}")
 
     # Generate plot
+    logging.info(f" === GENERATING COMMIT PLOT ===")
     create_commit_plot(
         all_dates=all_dates,
         all_counts=all_counts,
